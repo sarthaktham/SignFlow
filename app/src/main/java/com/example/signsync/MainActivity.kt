@@ -10,6 +10,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.signsync.ui.theme.Screens.AboutUsScreen
+import com.example.signsync.ui.theme.Screens.DetectionScreen
 import com.example.signsync.ui.theme.Screens.InnovationScreen // New Import
 import com.example.signsync.ui.theme.Screens.InstructionScreen
 import com.example.signsync.ui.theme.Screens.LoginScreen
@@ -30,6 +31,7 @@ object Routes {
 
     const val FEEDBACK = "feedback"
     const val SETTING = "setting"
+    const val DETECTION = "detection"
 
 }
 
@@ -73,8 +75,12 @@ fun AppNavigation() {
         composable(Routes.SETTING) {
             SettingsScreen(navController = navController)
         }
-        composable(Routes.INSTRUCTION){
-            InnovationScreen(navController = navController)
+        composable(Routes.INSTRUCTION) {
+            InstructionScreen(navController = navController)
+        }
+
+        composable(Routes.DETECTION) {
+            DetectionScreen(navController = navController)
         }
     }
 }

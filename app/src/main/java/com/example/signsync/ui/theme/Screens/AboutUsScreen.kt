@@ -33,6 +33,7 @@ import com.example.signsync.WhiteText
 // ----------------------------------------------------------------------
 
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AboutUsScreen(navController: NavController) {
     val scrollState = rememberScrollState()
