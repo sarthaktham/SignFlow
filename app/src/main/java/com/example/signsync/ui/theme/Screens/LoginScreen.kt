@@ -14,6 +14,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
@@ -98,7 +99,9 @@ fun LoginScreen(navController: NavController) {
                             Icon(Icons.Filled.Person, contentDescription = "Username Icon")
                         },
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
                         shape = RoundedCornerShape(12.dp)
                     )
 
@@ -112,7 +115,9 @@ fun LoginScreen(navController: NavController) {
                         },
                         visualTransformation = PasswordVisualTransformation(),
                         singleLine = true,
-                        modifier = Modifier.fillMaxWidth().padding(vertical = 8.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 8.dp),
                         shape = RoundedCornerShape(12.dp)
                     )
 
@@ -152,7 +157,7 @@ fun LoginScreen(navController: NavController) {
                     // Forgot Password Link
                     TextButton(onClick = { navController.navigate(Routes.WELCOME) }) {
                         Text(
-                            text = "Forgot Password?",
+                            text = stringResource(R.string.forgot_password),
                             color = DarkBlueAccent
                         )
                     }

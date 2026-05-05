@@ -16,70 +16,59 @@ import java.io.ByteArrayOutputStream
 
 class DetectionViewModel : ViewModel() {
 
-    // ── Detected sign letter or word ──────────────────────────
     private val _sign = MutableStateFlow<String?>(null)
     val sign: StateFlow<String?> = _sign.asStateFlow()
 
-    // ── Confidence 0.0 to 1.0 ────────────────────────────────
     private val _confidence = MutableStateFlow(0.0)
     val confidence: StateFlow<Double> = _confidence.asStateFlow()
 
-    // ── Sentence built from signs ─────────────────────────────
     private val _sentence = MutableStateFlow("")
     val sentence: StateFlow<String> = _sentence.asStateFlow()
 
-    // ── Loading while waiting for server ─────────────────────
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
-    // ── Error message ─────────────────────────────────────────
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
-    // ── Haptic trigger — increments every sign detection ──────
-    // LaunchedEffect watches this — fires vibration every time
     private val _hapticTrigger = MutableStateFlow(0)
     val hapticTrigger: StateFlow<Int> = _hapticTrigger.asStateFlow()
+
+    private var lastSign: String? = null
+    private var lastHapticTime = 0L
 
     fun predict(bitmap: Bitmap) {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
+
             try {
-                // Encode on background thread — CPU intensive
                 val base64 = withContext(Dispatchers.Default) {
                     bitmapToBase64(bitmap)
                 }
 
-                // Network call on IO thread
                 val response = withContext(Dispatchers.IO) {
                     ApiClient.api.predict(
                         PredictRequest("data:image/jpeg;base64,$base64")
                     )
                 }
 
-                _sign.value = response.sign
+                val newSign = response.sign
+                _sign.value = newSign
                 _confidence.value = response.confidence
 
-                // ── Trigger haptic every time a sign is detected
-                if (response.sign != null) {
+                val now = System.currentTimeMillis()
+                if (newSign != null && newSign != lastSign && now - lastHapticTime > 600) {
                     _hapticTrigger.value += 1
+                    lastHapticTime = now
+                    lastSign = newSign
                 }
 
-                response.sign?.let { buildSentence(it) }
+                newSign?.let { buildSentence(it) }
 
             } catch (e: Exception) {
                 _sign.value = null
-                _error.value = when {
-                    e.message?.contains("refused") == true ->
-                        "Cannot connect. Is python app.py running?"
-                    e.message?.contains("timeout") == true ->
-                        "Timeout. Check your Wi-Fi connection."
-                    e.message?.contains("failed to connect") == true ->
-                        "Wrong IP address in ApiClient.kt"
-                    else ->
-                        "Error: ${e.message}"
-                }
+                _error.value = "Error: ${e.message}"
             } finally {
                 _isLoading.value = false
             }
@@ -96,6 +85,7 @@ class DetectionViewModel : ViewModel() {
 
     fun clearSentence() {
         _sentence.value = ""
+        _hapticTrigger.value += 1 // Trigger vibration to confirm clearing
     }
 
     fun clearError() {
