@@ -30,7 +30,7 @@ import com.example.signsync.WhiteText
 
 // ----------------------------------------------------------------------
 // ## ℹ️ AboutUsScreen (with Navigation)
-// ----------------------------------------------------------------------
+
 
 
 @OptIn(ExperimentalMaterial3Api::class)

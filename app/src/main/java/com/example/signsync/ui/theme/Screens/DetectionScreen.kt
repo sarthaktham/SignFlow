@@ -1,6 +1,11 @@
 package com.example.signsync.ui.theme.Screens
 
 import android.Manifest
+import android.content.Context
+import android.os.Build
+import android.os.VibrationEffect
+import android.os.Vibrator
+import android.os.VibratorManager
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageAnalysis
 import androidx.camera.core.Preview
@@ -35,6 +40,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarDefaults
@@ -79,11 +86,57 @@ fun DetectionScreen(navController: NavController) {
     val lifecycleOwner = LocalLifecycleOwner.current
 
     // ── Observe ViewModel state ──────────────────────────────
-    val sign       by viewModel.sign.collectAsStateWithLifecycle()
-    val confidence by viewModel.confidence.collectAsStateWithLifecycle()
-    val sentence   by viewModel.sentence.collectAsStateWithLifecycle()
-    val isLoading  by viewModel.isLoading.collectAsStateWithLifecycle()
-    val error      by viewModel.error.collectAsStateWithLifecycle()
+    val sign          by viewModel.sign.collectAsStateWithLifecycle()
+    val confidence    by viewModel.confidence.collectAsStateWithLifecycle()
+    val sentence      by viewModel.sentence.collectAsStateWithLifecycle()
+    val isLoading     by viewModel.isLoading.collectAsStateWithLifecycle()
+    val error         by viewModel.error.collectAsStateWithLifecycle()
+    val hapticTrigger by viewModel.hapticTrigger.collectAsStateWithLifecycle()
+
+    // ── Haptic toggle — ON by default ────────────────────────
+    var hapticEnabled by remember { mutableStateOf(true) }
+
+    // ── Vibrator setup ───────────────────────────────────────
+    val vibrator = remember {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            val vm = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
+            vm.defaultVibrator
+        } else {
+            @Suppress("DEPRECATION")
+            context.getSystemService(Context.VIBRATOR_SERVICE) as Vibrator
+        }
+    }
+
+    // ── Vibrate every time hapticTrigger increments ──────────
+    LaunchedEffect(hapticTrigger) {
+        if (hapticTrigger == 0) return@LaunchedEffect
+        if (!hapticEnabled) return@LaunchedEffect
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            when {
+                sign?.length == 1 -> vibrator.vibrate(
+                    VibrationEffect.createOneShot(
+                        80L,
+                        VibrationEffect.DEFAULT_AMPLITUDE
+                    )
+                )
+                sign == "Space" -> vibrator.vibrate(
+                    VibrationEffect.createWaveform(
+                        longArrayOf(0, 60, 60, 60), -1
+                    )
+                )
+                else -> vibrator.vibrate(
+                    VibrationEffect.createOneShot(
+                        200L,
+                        VibrationEffect.DEFAULT_AMPLITUDE
+                    )
+                )
+            }
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(100L)
+        }
+    }
 
     // ── Camera permission ────────────────────────────────────
     val cameraPermission = rememberPermissionState(Manifest.permission.CAMERA)
@@ -131,7 +184,6 @@ fun DetectionScreen(navController: NavController) {
     // ── Root Box ─────────────────────────────────────────────
     Box(modifier = Modifier.fillMaxSize()) {
 
-        // Background image
         Image(
             painter = painterResource(R.drawable.app_background_image__2_),
             contentDescription = null,
@@ -139,7 +191,7 @@ fun DetectionScreen(navController: NavController) {
             contentScale = ContentScale.Crop
         )
 
-        // ── Permission denied state ──────────────────────────
+        // ── Permission denied ────────────────────────────────
         if (!cameraPermission.status.isGranted) {
             PermissionDeniedUI(
                 shouldShowRationale = cameraPermission.status.shouldShowRationale,
@@ -148,7 +200,6 @@ fun DetectionScreen(navController: NavController) {
             )
         } else {
 
-            // ── Camera granted — full detection UI ───────────
             Column(modifier = Modifier.fillMaxSize()) {
 
                 // ── Top bar ──────────────────────────────────
@@ -197,7 +248,7 @@ fun DetectionScreen(navController: NavController) {
                         )
                     }
 
-                    // Error card — top of camera area
+                    // Error card — top center
                     if (error != null) {
                         Card(
                             modifier = Modifier
@@ -234,7 +285,49 @@ fun DetectionScreen(navController: NavController) {
                         }
                     }
 
-                    // Detected sign card — bottom left of camera
+                    // ── Haptic toggle — top right ─────────────
+                    Card(
+                        modifier = Modifier
+                            .align(Alignment.TopEnd)
+                            .padding(12.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = DarkBlue.copy(alpha = 0.82f)
+                        ),
+                        shape = RoundedCornerShape(14.dp)
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(
+                                horizontal = 12.dp,
+                                vertical = 8.dp
+                            ),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = if (hapticEnabled) "📳" else "🔕",
+                                fontSize = 16.sp
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Text(
+                                text = "Haptic",
+                                color = WhiteText,
+                                fontSize = 12.sp,
+                                fontWeight = FontWeight.Medium
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Switch(
+                                checked = hapticEnabled,
+                                onCheckedChange = { hapticEnabled = it },
+                                colors = SwitchDefaults.colors(
+                                    checkedThumbColor = WhiteText,
+                                    checkedTrackColor = Color(0xFF4CAF50),
+                                    uncheckedThumbColor = WhiteText,
+                                    uncheckedTrackColor = Color.Gray
+                                )
+                            )
+                        }
+                    }
+
+                    // Detected sign card — bottom left
                     if (sign != null) {
                         Card(
                             modifier = Modifier
@@ -281,7 +374,6 @@ fun DetectionScreen(navController: NavController) {
                             .fillMaxWidth()
                             .padding(20.dp)
                     ) {
-                        // Label
                         Text(
                             text = "Sentence",
                             fontSize = 12.sp,
@@ -292,15 +384,13 @@ fun DetectionScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(6.dp))
 
-                        // Sentence text
                         Text(
                             text = sentence.ifEmpty { "Detected signs will appear here..." },
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = if (sentence.isEmpty())
                                 WhiteText.copy(alpha = 0.35f)
-                            else
-                                WhiteText,
+                            else WhiteText,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .heightIn(min = 56.dp),
@@ -309,7 +399,6 @@ fun DetectionScreen(navController: NavController) {
 
                         Spacer(modifier = Modifier.height(14.dp))
 
-                        // Clear button — right aligned
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.End
@@ -327,10 +416,7 @@ fun DetectionScreen(navController: NavController) {
                                     modifier = Modifier.size(16.dp)
                                 )
                                 Spacer(modifier = Modifier.width(6.dp))
-                                Text(
-                                    text = "Clear",
-                                    fontSize = 14.sp
-                                )
+                                Text(text = "Clear", fontSize = 14.sp)
                             }
                         }
                     }
@@ -357,8 +443,6 @@ fun PermissionDeniedUI(
             horizontalAlignment = Alignment.CenterHorizontally,
             modifier = Modifier.padding(horizontal = 32.dp)
         ) {
-
-            // Icon circle
             Box(
                 modifier = Modifier
                     .size(88.dp)
@@ -417,7 +501,6 @@ fun PermissionDeniedUI(
                         fontSize = 16.sp
                     )
                 }
-
                 Spacer(modifier = Modifier.height(12.dp))
             }
 
@@ -431,10 +514,7 @@ fun PermissionDeniedUI(
                     contentColor = WhiteText
                 )
             ) {
-                Text(
-                    text = "Go Back",
-                    fontSize = 16.sp
-                )
+                Text(text = "Go Back", fontSize = 16.sp)
             }
         }
     }

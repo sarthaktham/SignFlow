@@ -36,6 +36,11 @@ class DetectionViewModel : ViewModel() {
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> = _error.asStateFlow()
 
+    // ── Haptic trigger — increments every sign detection ──────
+    // LaunchedEffect watches this — fires vibration every time
+    private val _hapticTrigger = MutableStateFlow(0)
+    val hapticTrigger: StateFlow<Int> = _hapticTrigger.asStateFlow()
+
     fun predict(bitmap: Bitmap) {
         viewModelScope.launch {
             _isLoading.value = true
@@ -55,6 +60,12 @@ class DetectionViewModel : ViewModel() {
 
                 _sign.value = response.sign
                 _confidence.value = response.confidence
+
+                // ── Trigger haptic every time a sign is detected
+                if (response.sign != null) {
+                    _hapticTrigger.value += 1
+                }
+
                 response.sign?.let { buildSentence(it) }
 
             } catch (e: Exception) {
@@ -97,4 +108,3 @@ class DetectionViewModel : ViewModel() {
         return Base64.encodeToString(baos.toByteArray(), Base64.DEFAULT)
     }
 }
-
