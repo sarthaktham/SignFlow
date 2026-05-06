@@ -1,7 +1,6 @@
 package com.example.signsync.ui.theme.Screens
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -14,26 +13,26 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.signsync.DarkBlue
 import com.example.signsync.GlassyButtonColor
-import com.example.signsync.Routes
-
+import com.example.signsync.R
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InstructionScreen(navController: NavController) {
-    // Safety check: Use a fallback color if DarkBlue or GlassyButtonColor is null
     val primaryColor = try { DarkBlue } catch (e: Exception) { Color(0xFF001F3F) }
     val cardBackground = try { GlassyButtonColor.copy(alpha = 0.3f) } catch (e: Exception) { Color.LightGray.copy(alpha = 0.3f) }
 
     Scaffold(
         topBar = {
-            CenterAlignedTopAppBar( // Changed to CenterAligned for a more modern look
-                title = { Text("How to Use", fontWeight = FontWeight.Bold, color = primaryColor) },
+            CenterAlignedTopAppBar(
+                title = { Text(stringResource(R.string.how_to_use), fontWeight = FontWeight.Bold, color = primaryColor) },
                 navigationIcon = {
                     IconButton(onClick = { navController.popBackStack() }) {
                         Icon(
@@ -43,9 +42,7 @@ fun InstructionScreen(navController: NavController) {
                         )
                     }
                 },
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Transparent // Prevents crash from default theme conflicts
-                )
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
             )
         }
     ) { padding ->
@@ -56,20 +53,26 @@ fun InstructionScreen(navController: NavController) {
                 .padding(horizontal = 20.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Added a ScrollState so the app doesn't crash on smaller screens
             Column(
                 modifier = Modifier
-                    .weight(1f) // Takes up available space
+                    .weight(1f)
                     .verticalScroll(rememberScrollState())
                     .padding(vertical = 16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                InstructionStep("1", "Position your Camera", "Place your phone on a stable surface. Ensure your upper body is visible.", primaryColor, cardBackground)
-                InstructionStep("2", "Lighting Matters", "Make sure the room is well-lit. Avoid bright lights behind you.", primaryColor, cardBackground)
-                InstructionStep("3", "Sign Clearly", "Perform signs at a steady pace. The AI works best when movements are distinct.", primaryColor, cardBackground)
+                // Standard Instructions
+                InstructionStep("1", Icons.Default.CameraAlt, "Position your Camera", "Place your phone stably. Ensure your upper body and hands are visible.", primaryColor, cardBackground)
+
+                // Voice Feature
+                InstructionStep("2", Icons.Default.VolumeUp, "Audio Feedback (TTS)", "The app speaks out detected signs in real-time. Use the speaker icon to toggle voice on or off.", primaryColor, cardBackground)
+
+                // Haptic Feature (Crucial for Accessibility)
+                InstructionStep("3", Icons.Default.Vibration, "Haptic Vibration", "Feel the detection! A single pulse means a letter is detected. A double pulse indicates a 'Space'.", primaryColor, cardBackground)
+
+                // Environment
+                InstructionStep("4", Icons.Default.LightMode, "Lighting Matters", "Make sure the room is well-lit. Avoid having bright windows directly behind you.", primaryColor, cardBackground)
             }
 
-            // Bottom Button
             Button(
                 onClick = { navController.popBackStack() },
                 modifier = Modifier
@@ -86,7 +89,14 @@ fun InstructionScreen(navController: NavController) {
 }
 
 @Composable
-fun InstructionStep(number: String, title: String, description: String, themeColor: Color, bgColor: Color) {
+fun InstructionStep(
+    number: String,
+    icon: ImageVector,
+    title: String,
+    description: String,
+    themeColor: Color,
+    bgColor: Color
+) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
@@ -94,7 +104,7 @@ fun InstructionStep(number: String, title: String, description: String, themeCol
     ) {
         Row(
             modifier = Modifier.padding(20.dp),
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
             Surface(
                 shape = CircleShape,
@@ -102,12 +112,13 @@ fun InstructionStep(number: String, title: String, description: String, themeCol
                 modifier = Modifier.size(42.dp)
             ) {
                 Box(contentAlignment = Alignment.Center) {
-                    Text(number, color = Color.White, fontWeight = FontWeight.Bold)
+                    Icon(imageVector = icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(20.dp))
                 }
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
-                Text(title, fontWeight = FontWeight.ExtraBold, fontSize = 18.sp, color = themeColor)
+                Text(title, fontWeight = FontWeight.ExtraBold, fontSize = 17.sp, color = themeColor)
+                Spacer(modifier = Modifier.height(4.dp))
                 Text(description, fontSize = 14.sp, color = Color.DarkGray, lineHeight = 20.sp)
             }
         }

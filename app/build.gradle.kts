@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.gms.google-services")
+
 }
 
 android {
@@ -47,6 +49,12 @@ dependencies {
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
 
+    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
+    implementation("com.google.firebase:firebase-auth-ktx")
+    implementation("com.google.firebase:firebase-firestore-ktx")
+    // ViewModel
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.3")
+
     // ── Jetpack Compose (BOM manages all versions) ───────────
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
@@ -81,6 +89,28 @@ dependencies {
     // ── ViewModel ────────────────────────────────────────────
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.7.0")
+
+
+    implementation(platform("com.google.firebase:firebase-bom:33.1.0"))
+
+    // Auth
+    implementation("com.google.firebase:firebase-auth-ktx")
+
+    // Optional: Google Sign-In
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+    implementation("com.google.guava:guava:31.1-android")
+
+    implementation("com.google.firebase:firebase-auth-ktx")
+
+    // Already present for your AuthViewModel
+    implementation("com.google.firebase:firebase-auth-ktx")
+
+    // Add this for Google Sign-In support
+    implementation("com.google.android.gms:play-services-auth:21.2.0")
+
+    // Add Google Sign-In dependency
+    implementation("com.google.android.gms:play-services-auth:21.1.1")
+    implementation(libs.foundation)
 
     // ── Testing ──────────────────────────────────────────────
     testImplementation(libs.junit)

@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">SignFlow</string>
+    <string name="forgot_password">Forgot Password?</string>
+    <string name="how_to_use">How to Use</string>
+    <string name="our_innovation">Our Innovation</string>
+    <string name="how_it_works">How it works</string>
+    <string name="sign_dictionary">Sign Dictionary</string>
+    <string name="search_2000_gestures">Search 2000+ gestures</string>
 </resources>
